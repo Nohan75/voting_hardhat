@@ -6,13 +6,13 @@ async function main() {
     const proposals = (await ProposalsFactory.deploy()) as Proposals;
     proposals.deploymentTransaction();
 
-    console.log("Proposals contract deployed to:", proposals.address);
+    console.log("Proposals contract deployed to:", await proposals.getAddress());
 
     // Si vous voulez déployer d'autres contrats :
     const PropositionFactory = await ethers.getContractFactory("Proposition");
     const proposition = (await PropositionFactory.deploy("Example Title", 3600)) as Proposition;
     proposition.deploymentTransaction();
-    console.log("Proposition contract deployed to:", proposition.address);
+    console.log("Proposition contract deployed to:", await proposition.getAddress());
 }
 
 main().catch((error) => {
