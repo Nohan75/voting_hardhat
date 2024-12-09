@@ -31,7 +31,9 @@ contract Proposition {
         creator = msg.sender;
     }
 
-    function vote(bool support) external onlyDuringVoting {
+    function vote(bool support) external {
+        _checkAndCloseVoting();
+        require(!votingClosed, "Voting is closed.");
         require(!hasVoted[msg.sender], "You have already voted.");
 
         hasVoted[msg.sender] = true;
@@ -45,12 +47,18 @@ contract Proposition {
     }
 
     function closeVoting() external onlyCreator {
-        require(block.timestamp >= endTime, "Voting not yet ended.");
-        require(!votingClosed, "Voting already closed.");
+        _checkAndCloseVoting();
+    }
 
-        votingClosed = true;
+    function isVotingClosed() external view returns (bool) {
+        return votingClosed;
+    }
 
-        emit VotingClosed(votesFor, votesAgainst);
+    function _checkAndCloseVoting() internal {
+        if (block.timestamp >= endTime && !votingClosed) {
+            votingClosed = true;
+            emit VotingClosed(votesFor, votesAgainst);
+        }
     }
 
     function getResults() external view returns (uint256, uint256, uint256, uint256) {
