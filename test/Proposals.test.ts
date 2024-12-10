@@ -1,11 +1,12 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
-import { Proposals } from "../typechain-types";
+import { Proposals, Proposition } from "../typechain-types";
 
 describe("Proposals", function () {
     let proposals: Proposals;
     let owner: any;
     let proposer: any;
+
     beforeEach(async function () {
         [owner, proposer] = await ethers.getSigners();
 
@@ -32,5 +33,40 @@ describe("Proposals", function () {
         const activeProposals = await proposals.getActiveProposals();
         expect(activeProposals.length).to.equal(1);
         expect(activeProposals[0].title).to.equal("Active Proposal");
+    });
+
+    it("should get proposition results", async function () {
+        const tx = await proposals.connect(proposer).createProposal("Proposal with Results", 3600);
+        await tx.wait();
+
+        const allProposals = await proposals.getProposals();
+        const propositionAddress = allProposals[0].propositionContract;
+
+        const results = await proposals.getPropositionResults(propositionAddress);
+        expect(results).to.be.an("array").that.has.lengthOf(4);
+    });
+
+    it("should vote for a proposition", async function () {
+        const tx = await proposals.connect(proposer).createProposal("Proposal to Vote", 3600);
+        await tx.wait();
+
+        const allProposals = await proposals.getProposals();
+        const propositionAddress = allProposals[0].propositionContract;
+
+        await proposals.connect(proposer).voteForProposition(propositionAddress, true);
+
+        const results = await proposals.getPropositionResults(propositionAddress);
+        expect(results[0]).to.equal(1);
+    });
+
+    it("should update all proposals status", async function () {
+        await proposals.connect(proposer).createProposal("Proposal to Update", 1);
+        await ethers.provider.send("evm_increaseTime", [2]);
+        await ethers.provider.send("evm_mine");
+
+        await proposals.updateAllProposalsStatus();
+
+        const allProposals = await proposals.getProposals();
+        expect(allProposals[0].isClosed).to.be.false;
     });
 });

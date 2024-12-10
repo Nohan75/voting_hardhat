@@ -38,7 +38,7 @@ describe("Proposition", function () {
         await ethers.provider.send("evm_increaseTime", [3600]);
         await ethers.provider.send("evm_mine");
 
-        await expect(proposition.connect(voter1).vote(true)).to.be.revertedWith("Voting has ended.");
+        await expect(proposition.connect(voter1).vote(true)).to.be.revertedWith("Voting is closed.");
     });
 
     it("should close voting only by creator", async function () {
